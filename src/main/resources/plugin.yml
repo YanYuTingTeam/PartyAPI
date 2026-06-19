@@ -1,0 +1,3 @@
+name: PartyAPI
+version: '${version}'
+main: cn.linmoyu.partyapi.PartyAPI
