@@ -39,4 +39,18 @@ public class PartyInfo {
     public boolean isMember(UUID playerId) {
         return leader.equals(playerId) || members.contains(playerId);
     }
+
+    public void addMember(UUID memberId) {
+        if (!members.contains(memberId)) {
+            members.add(memberId);
+        }
+    }
+
+    public void removeMember(UUID memberId) {
+        members.remove(memberId);
+    }
+
+    public boolean isFull() {
+        return members.size() + 1 >= 5;
+    }
 }
