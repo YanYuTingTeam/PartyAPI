@@ -142,6 +142,8 @@ public class ChannelHandler {
         partyManager.cacheParty(player.getUniqueId(), partyInfo);
         Bukkit.getPluginManager().callEvent(new PartyLoadedEvent(partyInfo));
 
+        plugin.getTaskManager().cancel(player.getUniqueId());
+
         plugin.getLogger().info("已缓存队伍信息: 队长=" + leaderName + ", 成员=" + (membersStr == null ? "无" : membersStr));
     }
 

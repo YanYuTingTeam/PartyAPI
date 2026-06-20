@@ -4,6 +4,7 @@ import cn.linmoyu.partyapi.channel.ChannelHandler;
 import cn.linmoyu.partyapi.listener.PlayerJoinListener;
 import cn.linmoyu.partyapi.listener.PlayerQuitListener;
 import cn.linmoyu.partyapi.manager.PartyManager;
+import cn.linmoyu.partyapi.task.TaskManager;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,6 +17,8 @@ public final class PartyAPI extends JavaPlugin {
     private PartyManager partyManager;
     @Getter
     private ChannelHandler channelHandler;
+    @Getter
+    private TaskManager taskManager;
 
     @Override
     public void onEnable() {
@@ -25,6 +28,7 @@ public final class PartyAPI extends JavaPlugin {
         channelHandler = new ChannelHandler(this, partyManager);
         channelHandler.register();
 
+        taskManager = new TaskManager();
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(), this);
 
