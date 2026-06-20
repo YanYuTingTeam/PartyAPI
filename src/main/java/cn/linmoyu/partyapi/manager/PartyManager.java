@@ -1,6 +1,8 @@
 package cn.linmoyu.partyapi.manager;
 
+import cn.linmoyu.partyapi.event.*;
 import cn.linmoyu.partyapi.model.PartyInfo;
+import org.bukkit.Bukkit;
 
 import java.util.List;
 import java.util.Map;
@@ -35,17 +37,13 @@ public class PartyManager {
     }
 
     public void removeParty(UUID playerId) {
-        PartyInfo party = partyCache.remove(playerId);
-        if (party != null) {
-            for (UUID member : party.getAllMembers()) {
-                partyCache.remove(member);
-            }
-        }
+        partyCache.remove(playerId);
     }
 
     public void createParty(UUID leaderId, List<UUID> memberIds) {
         PartyInfo partyInfo = new PartyInfo(leaderId, memberIds);
         cacheParty(leaderId, partyInfo);
+        Bukkit.getPluginManager().callEvent(new PartyCreateEvent(partyInfo, memberIds));
     }
 
     public boolean kickMember(UUID operatorId, UUID targetId) {
@@ -54,6 +52,7 @@ public class PartyManager {
         if (!party.isMember(targetId)) return false;
         party.removeMember(targetId);
         partyCache.remove(targetId);
+        Bukkit.getPluginManager().callEvent(new PartyKickEvent(party, operatorId, targetId));
         if (party.getSize() <= 1) {
             disbandParty(operatorId);
         }
@@ -66,6 +65,7 @@ public class PartyManager {
         if (party.isFull()) return false;
         party.addMember(memberId);
         partyCache.put(memberId, party);
+        Bukkit.getPluginManager().callEvent(new PartyJoinEvent(party, memberId, leaderId));
         return true;
     }
 
@@ -78,6 +78,7 @@ public class PartyManager {
         }
         party.removeMember(playerId);
         partyCache.remove(playerId);
+        Bukkit.getPluginManager().callEvent(new PartyLeaveEvent(party, playerId));
         return true;
     }
 
@@ -87,6 +88,7 @@ public class PartyManager {
         for (UUID member : party.getAllMembers()) {
             partyCache.remove(member);
         }
+        Bukkit.getPluginManager().callEvent(new PartyDisbandEvent(party));
         return true;
     }
 

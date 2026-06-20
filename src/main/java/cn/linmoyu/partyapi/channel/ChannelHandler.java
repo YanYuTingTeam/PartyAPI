@@ -1,6 +1,7 @@
 package cn.linmoyu.partyapi.channel;
 
 import cn.linmoyu.partyapi.PartyAPI;
+import cn.linmoyu.partyapi.event.PartyLoadedEvent;
 import cn.linmoyu.partyapi.manager.PartyManager;
 import cn.linmoyu.partyapi.model.PartyInfo;
 import org.bukkit.Bukkit;
@@ -139,6 +140,7 @@ public class ChannelHandler {
 
         PartyInfo partyInfo = new PartyInfo(leader.getUniqueId(), memberIds);
         partyManager.cacheParty(player.getUniqueId(), partyInfo);
+        Bukkit.getPluginManager().callEvent(new PartyLoadedEvent(partyInfo));
 
         plugin.getLogger().info("已缓存队伍信息: 队长=" + leaderName + ", 成员=" + (membersStr == null ? "无" : membersStr));
     }
