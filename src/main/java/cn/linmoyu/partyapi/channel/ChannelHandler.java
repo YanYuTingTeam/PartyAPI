@@ -43,6 +43,8 @@ public class ChannelHandler {
             if (action == null) return;
             plugin.getLogger().info("收到channel消息 <- " + player.getName() + ": " + message);
 
+            plugin.getTaskManager().cancel(player.getUniqueId());
+
             switch (action) {
                 case "getparty":
                     handleGetParty(parsed);
