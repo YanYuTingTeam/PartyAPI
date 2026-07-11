@@ -111,7 +111,7 @@ public class ChannelHandler {
 
     private void handleGetPartyResp(Map<String, String> data) {
         String playerName = data.get("player");
-        String leaderName = data.get("leader");
+        String leaderUuidStr = data.get("leader");
         String membersStr = data.get("members");
 
         if (playerName == null || playerName.isEmpty()) return;
@@ -119,34 +119,43 @@ public class ChannelHandler {
         Player player = Bukkit.getPlayerExact(playerName);
         if (player == null) return;
 
-        if (leaderName == null || leaderName.isEmpty()) {
+        if (leaderUuidStr == null || leaderUuidStr.isEmpty()) {
             partyManager.removeParty(player.getUniqueId());
             return;
         }
 
-        Player leader = Bukkit.getPlayerExact(leaderName);
+        UUID leaderUuid;
+        try {
+            leaderUuid = UUID.fromString(leaderUuidStr);
+        } catch (IllegalArgumentException e) {
+            partyManager.removeParty(player.getUniqueId());
+            return;
+        }
+
+        Player leader = Bukkit.getPlayer(leaderUuid);
         if (leader == null) return;
 
         List<UUID> memberIds = new ArrayList<>();
         if (membersStr != null && !membersStr.isEmpty()) {
-            String[] memberNames = membersStr.split(";");
-            for (String name : memberNames) {
-                name = name.trim();
-                if (name.isEmpty()) continue;
-                Player member = Bukkit.getPlayerExact(name);
-                if (member != null) {
-                    memberIds.add(member.getUniqueId());
+            String[] uuidParts = membersStr.split(";");
+            for (String uuidStr : uuidParts) {
+                uuidStr = uuidStr.trim();
+                if (uuidStr.isEmpty()) continue;
+                try {
+                    UUID memberId = UUID.fromString(uuidStr);
+                    memberIds.add(memberId);
+                } catch (IllegalArgumentException ignored) {
                 }
             }
         }
 
-        PartyInfo partyInfo = new PartyInfo(leader.getUniqueId(), memberIds);
+        PartyInfo partyInfo = new PartyInfo(leaderUuid, memberIds);
         partyManager.cacheParty(player.getUniqueId(), partyInfo);
         Bukkit.getPluginManager().callEvent(new PartyLoadedEvent(partyInfo));
 
         plugin.getTaskManager().cancel(player.getUniqueId());
 
-        plugin.getLogger().info("已缓存队伍信息: 队长=" + leaderName + ", 成员=" + (membersStr == null ? "无" : membersStr));
+        plugin.getLogger().info("已缓存队伍信息: 队长=" + leaderUuidStr + ", 成员=" + (membersStr == null ? "无" : membersStr));
     }
 
     private void handleKick(Map<String, String> data) {
