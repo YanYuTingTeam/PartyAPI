@@ -73,50 +73,59 @@ public class ChannelHandler {
     }
 
     private void handleGetParty(Map<String, String> data) {
-        String playerName = data.get("player");
-        if (playerName == null || playerName.isEmpty()) return;
+        String playerUuidStr = data.get("player");
+        if (playerUuidStr == null || playerUuidStr.isEmpty()) return;
 
-        Player player = Bukkit.getPlayerExact(playerName);
+        UUID playerUuid;
+        try {
+            playerUuid = UUID.fromString(playerUuidStr);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+
+        Player player = Bukkit.getPlayer(playerUuid);
         if (player == null) return;
 
-        UUID playerId = player.getUniqueId();
-        PartyInfo party = partyManager.getParty(playerId);
+        PartyInfo party = partyManager.getParty(playerUuid);
 
-        String leaderName;
+        String leaderUuid;
         String membersStr;
 
         if (party == null) {
-            leaderName = "";
+            leaderUuid = "";
             membersStr = "";
         } else {
-            Player leader = Bukkit.getPlayer(party.getLeader());
-            leaderName = leader != null ? leader.getName() : "";
-            List<String> memberNames = new ArrayList<>();
+            leaderUuid = party.getLeader().toString();
+            List<String> memberUuids = new ArrayList<>();
             for (UUID memberId : party.getMembers()) {
-                Player member = Bukkit.getPlayer(memberId);
-                if (member != null) {
-                    memberNames.add(member.getName());
-                }
+                memberUuids.add(memberId.toString());
             }
-            membersStr = String.join(";", memberNames);
+            membersStr = String.join(";", memberUuids);
         }
 
-        String response = "action=getpartyresp,player=" + playerName
-                + ",leader=" + leaderName
+        String response = "action=getpartyresp,player=" + playerUuidStr
+                + ",leader=" + leaderUuid
                 + ",members=" + membersStr;
 
         sendPluginMessage(player, response);
-        plugin.getLogger().info("getparty请求 <- " + playerName + ", 响应 -> " + response);
+        plugin.getLogger().info("getparty请求 <- " + player.getName() + ", 响应 -> " + response);
     }
 
     private void handleGetPartyResp(Map<String, String> data) {
-        String playerName = data.get("player");
+        String playerUuidStr = data.get("player");
         String leaderUuidStr = data.get("leader");
         String membersStr = data.get("members");
 
-        if (playerName == null || playerName.isEmpty()) return;
+        if (playerUuidStr == null || playerUuidStr.isEmpty()) return;
 
-        Player player = Bukkit.getPlayerExact(playerName);
+        UUID playerUuid;
+        try {
+            playerUuid = UUID.fromString(playerUuidStr);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+
+        Player player = Bukkit.getPlayer(playerUuid);
         if (player == null) return;
 
         if (leaderUuidStr == null || leaderUuidStr.isEmpty()) {
@@ -230,7 +239,7 @@ public class ChannelHandler {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
-            String msg = "action=getparty,player=" + player.getName();
+            String msg = "action=getparty,player=" + player.getUniqueId().toString();
             dos.writeUTF(msg);
             player.sendPluginMessage(plugin, CHANNEL, baos.toByteArray());
             plugin.getLogger().info("发送getparty请求 -> " + player.getName());
